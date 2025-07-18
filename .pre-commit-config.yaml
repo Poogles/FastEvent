@@ -1,0 +1,42 @@
+repos:
+  # Monorepo wide checks.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: end-of-file-fixer # Trims end of files.
+      - id: debug-statements # Checks for breakpoint() + debuggers
+      - id: check-merge-conflict # Checks for merge conflict strings
+      - id: check-toml # Checks toml parsibility.
+      - id: check-yaml # Checks yaml parsibility.
+  - repo: https://github.com/psf/black
+    rev: 22.12.0
+    hooks:
+      - id: black
+  - repo: local
+    hooks:
+      - id: isort
+        name: sort imports
+        entry: bash -c 'poetry run isort --profile black .'
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff check fix
+        entry: bash -c 'poetry run ruff check . --fix'
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy check types
+        entry: bash -c 'poetry run mypy --explicit-package-bases fastevent tests'
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: pyupgrade
+        name: pyupgrade check
+        entry: bash -c 'poetry run pyupgrade --py313-plus ./**/*.py'
+        language: system
+        pass_filenames: false
