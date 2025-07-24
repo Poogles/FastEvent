@@ -1,4 +1,4 @@
-# Byte-compiled / optimized / DLL files
+ Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
@@ -201,3 +201,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# OSX
+.DS_Store

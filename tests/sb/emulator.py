@@ -4,10 +4,14 @@ from pathlib import Path
 from typing import Self
 from uuid import uuid4
 
-from testcontainers.core.container import DockerContainer
-from testcontainers.core.network import Network
-from testcontainers.core.waiting_utils import wait_for_logs
-from testcontainers.mssql import SqlServerContainer
+from testcontainers.core.container import (  # type: ignore[import-untyped]
+    DockerContainer,
+)
+from testcontainers.core.network import Network  # type: ignore[import-untyped]
+from testcontainers.core.waiting_utils import (  # type: ignore[import-untyped]
+    wait_for_logs,
+)
+from testcontainers.mssql import SqlServerContainer  # type: ignore[import-untyped]
 
 PASSWORD = secrets.token_urlsafe(32)
 CONNECTION_STRING_FORMAT = (

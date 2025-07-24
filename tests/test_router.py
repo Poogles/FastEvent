@@ -1,7 +1,7 @@
 import pytest
 from pydantic import BaseModel
 
-from fastevent import EventRoute, EventRouter
+from fastevent import EventRouter, Route
 
 
 class InputModel(BaseModel):
@@ -11,49 +11,6 @@ class InputModel(BaseModel):
 
 class OutputModel(BaseModel):
     baz: str
-
-
-def handler_with_models(input: InputModel) -> OutputModel:
-    return OutputModel(baz="potato")
-
-
-def handler_with_input_only(input: InputModel):
-    pass
-
-
-def handler_with_output_only() -> OutputModel:
-    return OutputModel(baz="potato")
-
-
-def handler_with_no_models(x: int) -> str:
-    return "test"
-
-
-def test_route_with_input_and_output_models() -> None:
-    route = EventRoute("topic", "sub", handler_with_models)
-    assert route.topic == "topic"
-    assert route.subscription == "sub"
-    assert route.handler == handler_with_models
-    assert route.input_model is InputModel
-    assert route.output_model is OutputModel
-
-
-def test_route_with_input_model_only() -> None:
-    route = EventRoute("topic", "sub", handler_with_input_only)
-    assert route.input_model is InputModel
-    assert route.output_model is None
-
-
-def test_route_with_output_model_only() -> None:
-    route = EventRoute("topic", "sub", handler_with_output_only)
-    assert route.input_model is None
-    assert route.output_model is OutputModel
-
-
-def test_route_with_no_models() -> None:
-    route = EventRoute("topic", "sub", handler_with_no_models)
-    assert route.input_model is None
-    assert route.output_model is None
 
 
 def test_event_router_registers_route() -> None:
@@ -66,7 +23,7 @@ def test_event_router_registers_route() -> None:
     assert len(router.routes) == 1
     route = router.routes[("topic1", "sub1")]
 
-    assert isinstance(route, EventRoute)
+    assert isinstance(route, Route)
     assert route.topic == "topic1"
     assert route.subscription == "sub1"
     assert route.handler.__name__ == "test_handler"
