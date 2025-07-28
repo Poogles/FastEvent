@@ -2,6 +2,7 @@ import logging
 from collections.abc import Generator
 
 import pytest
+from azure.servicebus import ServiceBusClient
 
 from tests.sb.emulator import AzureServiceBusEmulator
 
@@ -57,3 +58,11 @@ def servicebus() -> Generator[AzureServiceBusEmulator]:
     sb.start()
 
     yield sb
+
+
+@pytest.fixture(scope="session")
+def servicebus_client(servicebus: AzureServiceBusEmulator) -> ServiceBusClient:
+    conn_str = servicebus.get_connection_string()
+
+    client = ServiceBusClient.from_connection_string(conn_str, logging_enable=True)
+    return client

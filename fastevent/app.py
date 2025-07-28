@@ -15,6 +15,7 @@ class EventApp:
         self.routers.append(router)
 
     async def run(self):
+        breakpoint()
         async with self.sb_client:
             receivers = []
             for router in self.routers:
