@@ -1,3 +1,5 @@
+import pytest
+from azure.servicebus import ServiceBusMessage
 from pydantic import BaseModel
 
 from fastevent import Route
@@ -49,3 +51,36 @@ def test_route_with_no_models() -> None:
     route = Route("topic", "sub", handler_with_no_models)
     assert route.input_model is None
     assert route.output_model is None
+
+
+def test_route_equals() -> None:
+    def simple_route(input: str) -> None:
+        pass
+
+    route = Route("topic", "sub", simple_route)
+    assert route == Route("topic", "sub", simple_route)
+    assert route != Route("topic", "sub2", simple_route)
+
+    with pytest.raises(NotImplementedError):
+        assert route == object
+
+
+def test_route_hash() -> None:
+    def simple_route(input: str) -> None:
+        pass
+
+    route = Route("topic", "sub", simple_route)
+    assert hash(route)
+
+
+@pytest.mark.asyncio
+async def test_route_handle_message_success() -> None:
+    def handler_with_models(input: InputModel) -> OutputModel:
+        return OutputModel(baz="potato")
+
+    route = Route("topic", "sub", handler_with_models)
+
+    input_message = ServiceBusMessage(InputModel(foo="bar", bar=1).model_dump_json())
+    processed_event = await route.handle_message(input_message)
+
+    assert processed_event == '{"baz":"potato"}'

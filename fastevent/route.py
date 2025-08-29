@@ -1,5 +1,5 @@
 import inspect
-import json
+import logging
 from collections.abc import Callable
 from typing import Any, ParamSpec, TypeVar, get_type_hints
 
@@ -8,6 +8,7 @@ from pydantic import BaseModel, ValidationError
 
 HandlerType = Callable[..., Any]
 
+log = logging.getLogger(__name__)
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -45,19 +46,23 @@ class Route:
     async def handle_message(self, raw_message: ServiceBusMessage) -> str | None:
         """Deserialize the message, call the handler, serialize the output."""
         try:
-            # TODO: This isn't how service bus works.
-            body = str(raw_message)
-            data = json.loads(body)
+            log.debug("Received message: %r", raw_message)
+            body = "".join([x.decode() for x in raw_message.body])
 
             # Deserialize input
-            input_obj = self.input_model(**data) if self.input_model else None
+            input_obj = (
+                self.input_model.model_validate_json(body) if self.input_model else body
+            )
+            log.debug("Parsed input object: %r", input_obj)
 
             # Call handler
             result = await self._maybe_async(self.handler, input_obj)
+            log.debug("Called async handler.")
 
-            # TODO: This is a mess.
+            # TODO: Refactor this to write back into service bus.
             if self.output_model and result is not None:
-                return self.output_model.parse_obj(result).json()
+                validated_result = self.output_model.model_validate(result)
+                return validated_result.model_dump_json()
 
         except ValidationError:
             # TODO: Do something here

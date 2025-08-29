@@ -1,14 +1,16 @@
+import logging
+import time
 from collections.abc import Callable
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, create_autospec
 
 import pytest
 from azure.servicebus import ServiceBusMessage
-from azure.servicebus import ServiceBusClient as SyncServiceBusClient
 from azure.servicebus.aio import ServiceBusClient, ServiceBusReceiver
 
 from fastevent import EventApp, EventRouter, Route
-from tests.sb.emulator import AzureServiceBusEmulator
+
+log = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -66,7 +68,9 @@ async def test_app_run_invokes_get_subscription_receiver(
     app = EventApp(sb_client=mock_sb_client)
     app.include_router(fake_router)
 
-    await app.run()
+    app.run()
+
+    time.sleep(0.1)  # required because this happens in a thread
 
     mock_sb_client.get_subscription_receiver.assert_called_once_with(  # type: ignore
         topic_name="test-topic",
@@ -109,47 +113,19 @@ async def test_app_run_invokes_route_handle_message(
     app = EventApp(sb_client=mock_sb_client)
     app.include_router(router)
 
-    await app.run()
+    app.run()
+
+    time.sleep(0.1)  # required because this happens in a thread
 
     mock_handle_message.assert_awaited_once_with(fake_message)
     _receiver.complete_message.assert_awaited_once_with(fake_message)  # type: ignore
 
 
-@pytest.fixture(scope="session")
-def async_servicebus_client(servicebus: AzureServiceBusEmulator) -> ServiceBusClient:
-    breakpoint()
-    conn_str = servicebus.get_connection_string()
-
-    client = ServiceBusClient.from_connection_string(conn_str, logging_enable=True)
-    return client
-
-
-@pytest.mark.asyncio
-async def test_integration(
-    servicebus_client: SyncServiceBusClient, async_servicebus_client: ServiceBusClient
+def test_app_stop_no_running_app(
+    mock_sb_client: ServiceBusClient,
 ) -> None:
-    breakpoint()
-    # Write our one event into service bus
-    TOPIC1 = "test-topic"
-    sender = servicebus_client.get_topic_sender(topic_name=TOPIC1)
+    app = EventApp(sb_client=mock_sb_client)
 
-    router = EventRouter()
-
-    processed_events = []
-
-    @router.event_handler(topic="test-topic", subscription="test-subscription")
-    async def test(arg: Any) -> None:
-        processed_events.append(arg)
-        pass
-
-    app = EventApp(sb_client=async_servicebus_client)
-    app.include_router(router)
-
-    breakpoint()
-
-    await app.run()
-
-    breakpoint()
-
-    sender.send_messages(ServiceBusMessage("test"))
-    assert processed_events == ["test"]
+    with pytest.raises(Exception):
+        # No app is running, so stopping is unavailable.
+        app.stop()

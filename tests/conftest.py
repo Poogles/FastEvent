@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 # Service Bus configuration.
 NAMESPACE = "sbemulatorns"
-TOPIC1 = "test-topic"
+TOPIC = "test-topic"
 SUBSCRIPTION = "test-subscription"
 
 SB_CONFIG = {
@@ -22,7 +22,7 @@ SB_CONFIG = {
                 "Queues": [],
                 "Topics": [
                     {
-                        "Name": TOPIC1,
+                        "Name": TOPIC,
                         "Properties": {
                             "DefaultMessageTimeToLive": "PT1H",
                             "DuplicateDetectionHistoryTimeWindow": "PT20S",
@@ -66,3 +66,13 @@ def servicebus_client(servicebus: AzureServiceBusEmulator) -> ServiceBusClient:
 
     client = ServiceBusClient.from_connection_string(conn_str, logging_enable=True)
     return client
+
+
+@pytest.fixture
+def topic() -> str:
+    return TOPIC
+
+
+@pytest.fixture
+def subscription() -> str:
+    return SUBSCRIPTION

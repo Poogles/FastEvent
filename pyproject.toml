@@ -51,6 +51,12 @@ format-jinja = """
 [tool.poetry-dynamic-versioning.substitution]
 files = ["fastevent/__init__.py"]
 
+[tool.pytest.ini_options]
+addopts = ["-m", "not integration", "--strict-markers", "--random-order"]
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+]
+
 [tool.ruff]
 exclude = [
     ".git",

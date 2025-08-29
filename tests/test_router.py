@@ -83,6 +83,29 @@ def test_event_router_multiple_routes() -> None:
     assert router.routes[("b", "s2")].topic == "b"
 
 
+def test_event_router_multiple_routes_failure_duplicate_topic_subscription() -> None:
+    router = EventRouter()
+
+    @router.event_handler(topic="a", subscription="s1")
+    def handler1(x: InputModel) -> OutputModel:
+        return OutputModel(baz="1")
+
+    with pytest.raises(ValueError):
+
+        @router.event_handler(topic="a", subscription="s1")
+        def handler2(x: InputModel) -> OutputModel:
+            return OutputModel(baz="1")
+
+
+def test_event_router_failure_non_callable() -> None:
+    router = EventRouter()
+
+    decorator = router.event_handler(topic="t", subscription="s")
+
+    with pytest.raises(TypeError):
+        decorator(123)  # type: ignore
+
+
 def test_event_router_arguments_must_be_kwargs() -> None:
     router = EventRouter()
 
