@@ -68,7 +68,15 @@ class EventApp:
             log.debug("Starting receiving of messages...")
             async for message in receiver:
                 log.debug("Received message: %r", message)
-                await route.handle_message(message)
-                log.debug("Handled message: %r", message)
-                await receiver.complete_message(message)
-                log.debug("Completed message: %r", message)
+
+                try:
+                    await route.handle_message(message)
+                    log.debug("Handled message: %r", message)
+                # TODO: Narrow this right down.
+                except Exception:
+                    await receiver.dead_letter_message(message)
+                    log.debug("DLQ'ed message: %r", message)
+
+                else:
+                    await receiver.complete_message(message)
+                    log.debug("Completed message: %r", message)

@@ -64,12 +64,11 @@ class Route:
                 validated_result = self.output_model.model_validate(result)
                 return validated_result.model_dump_json()
 
-        except ValidationError:
-            # TODO: Do something here
-            ...
-        except Exception:
-            # TODO: Do something generic here?
-            ...
+        # TODO: Do some handling here.
+        except ValidationError as e:
+            raise e
+        except Exception as e:
+            raise e
 
         return None
 

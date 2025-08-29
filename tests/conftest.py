@@ -76,3 +76,11 @@ def topic() -> str:
 @pytest.fixture
 def subscription() -> str:
     return SUBSCRIPTION
+
+
+@pytest.fixture(scope="session")
+def async_servicebus_client(servicebus: AzureServiceBusEmulator) -> ServiceBusClient:
+    conn_str = servicebus.get_connection_string()
+
+    client = ServiceBusClient.from_connection_string(conn_str, logging_enable=True)
+    return client
